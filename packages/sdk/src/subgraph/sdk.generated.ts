@@ -8996,7 +8996,10 @@ export type ProposalFragment = {
   vetoTransactionHash?: any | null
   cancelTransactionHash?: any | null
   updatePeriodEnd?: any | null
+  updateMessage?: string | null
+  updateCount: number
   dao: { __typename?: 'DAO'; governorAddress: any; tokenAddress: any }
+  replaces?: { __typename?: 'Proposal'; proposalId: any; proposalNumber: number } | null
   replacedBy?: { __typename?: 'Proposal'; proposalId: any; proposalNumber: number } | null
 }
 
@@ -9031,7 +9034,10 @@ export type ProposalDetailFragment = {
   vetoTransactionHash?: any | null
   cancelTransactionHash?: any | null
   updatePeriodEnd?: any | null
+  updateMessage?: string | null
+  updateCount: number
   dao: { __typename?: 'DAO'; governorAddress: any; tokenAddress: any }
+  replaces?: { __typename?: 'Proposal'; proposalId: any; proposalNumber: number } | null
   replacedBy?: { __typename?: 'Proposal'; proposalId: any; proposalNumber: number } | null
 }
 
@@ -9839,8 +9845,15 @@ export type DaosForDashboardQuery = {
       vetoTransactionHash?: any | null
       cancelTransactionHash?: any | null
       updatePeriodEnd?: any | null
+      updateMessage?: string | null
+      updateCount: number
       votes: Array<{ __typename?: 'ProposalVote'; voter: any }>
       dao: { __typename?: 'DAO'; governorAddress: any; tokenAddress: any }
+      replaces?: {
+        __typename?: 'Proposal'
+        proposalId: any
+        proposalNumber: number
+      } | null
       replacedBy?: {
         __typename?: 'Proposal'
         proposalId: any
@@ -10345,6 +10358,8 @@ export type ProposalQuery = {
     vetoTransactionHash?: any | null
     cancelTransactionHash?: any | null
     updatePeriodEnd?: any | null
+    updateMessage?: string | null
+    updateCount: number
     votes: Array<{
       __typename?: 'ProposalVote'
       voter: any
@@ -10353,6 +10368,7 @@ export type ProposalQuery = {
       reason?: string | null
     }>
     dao: { __typename?: 'DAO'; governorAddress: any; tokenAddress: any }
+    replaces?: { __typename?: 'Proposal'; proposalId: any; proposalNumber: number } | null
     replacedBy?: {
       __typename?: 'Proposal'
       proposalId: any
@@ -10415,6 +10431,8 @@ export type ProposalOgMetadataQuery = {
     vetoTransactionHash?: any | null
     cancelTransactionHash?: any | null
     updatePeriodEnd?: any | null
+    updateMessage?: string | null
+    updateCount: number
     votes: Array<{
       __typename?: 'ProposalVote'
       voter: any
@@ -10432,6 +10450,55 @@ export type ProposalOgMetadataQuery = {
       treasuryAddress: any
       governorAddress: any
     }
+    replaces?: { __typename?: 'Proposal'; proposalId: any; proposalNumber: number } | null
+    replacedBy?: {
+      __typename?: 'Proposal'
+      proposalId: any
+      proposalNumber: number
+    } | null
+  }>
+}
+
+export type ProposalVersionsQueryVariables = Exact<{
+  where?: InputMaybe<Proposal_Filter>
+}>
+
+export type ProposalVersionsQuery = {
+  __typename?: 'Query'
+  proposals: Array<{
+    __typename?: 'Proposal'
+    abstainVotes: number
+    againstVotes: number
+    calldatas?: string | null
+    description?: string | null
+    representedAddress?: string | null
+    discussionUrl?: string | null
+    descriptionHash: any
+    executableFrom?: any | null
+    expiresAt?: any | null
+    forVotes: number
+    proposalId: any
+    proposalNumber: number
+    proposalThreshold: any
+    proposer: any
+    quorumVotes: any
+    targets: Array<any>
+    timeCreated: any
+    title?: string | null
+    values: Array<any>
+    voteEnd: any
+    voteStart: any
+    snapshotBlockNumber: any
+    transactionHash: any
+    executedAt?: any | null
+    executionTransactionHash?: any | null
+    vetoTransactionHash?: any | null
+    cancelTransactionHash?: any | null
+    updatePeriodEnd?: any | null
+    updateMessage?: string | null
+    updateCount: number
+    dao: { __typename?: 'DAO'; governorAddress: any; tokenAddress: any }
+    replaces?: { __typename?: 'Proposal'; proposalId: any; proposalNumber: number } | null
     replacedBy?: {
       __typename?: 'Proposal'
       proposalId: any
@@ -10478,6 +10545,8 @@ export type ProposalsQuery = {
     vetoTransactionHash?: any | null
     cancelTransactionHash?: any | null
     updatePeriodEnd?: any | null
+    updateMessage?: string | null
+    updateCount: number
     votes: Array<{
       __typename?: 'ProposalVote'
       voter: any
@@ -10486,6 +10555,7 @@ export type ProposalsQuery = {
       reason?: string | null
     }>
     dao: { __typename?: 'DAO'; governorAddress: any; tokenAddress: any }
+    replaces?: { __typename?: 'Proposal'; proposalId: any; proposalNumber: number } | null
     replacedBy?: {
       __typename?: 'Proposal'
       proposalId: any
@@ -11044,9 +11114,15 @@ export const ProposalFragmentDoc = gql`
     vetoTransactionHash
     cancelTransactionHash
     updatePeriodEnd
+    updateMessage
+    updateCount
     dao {
       governorAddress
       tokenAddress
+    }
+    replaces {
+      proposalId
+      proposalNumber
     }
     replacedBy {
       proposalId
@@ -12044,6 +12120,14 @@ export const ProposalOgMetadataDocument = gql`
   ${ProposalDetailFragmentDoc}
   ${ProposalVoteFragmentDoc}
 `
+export const ProposalVersionsDocument = gql`
+  query proposalVersions($where: Proposal_filter) {
+    proposals(where: $where, orderBy: updateCount, orderDirection: asc) {
+      ...Proposal
+    }
+  }
+  ${ProposalFragmentDoc}
+`
 export const ProposalsDocument = gql`
   query proposals($where: Proposal_filter, $first: Int!, $skip: Int) {
     proposals(
@@ -12861,6 +12945,24 @@ export function getSdk(
             signal,
           }),
         'proposalOGMetadata',
+        'query',
+        variables
+      )
+    },
+    proposalVersions(
+      variables?: ProposalVersionsQueryVariables,
+      requestHeaders?: GraphQLClientRequestHeaders,
+      signal?: RequestInit['signal']
+    ): Promise<ProposalVersionsQuery> {
+      return withWrapper(
+        (wrappedRequestHeaders) =>
+          client.request<ProposalVersionsQuery>({
+            document: ProposalVersionsDocument,
+            variables,
+            requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders },
+            signal,
+          }),
+        'proposalVersions',
         'query',
         variables
       )
