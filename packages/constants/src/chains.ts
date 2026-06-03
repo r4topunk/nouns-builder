@@ -6,8 +6,6 @@ import {
   optimism,
   optimismSepolia,
   sepolia,
-  zora,
-  zoraSepolia,
 } from 'wagmi/chains'
 
 /**
@@ -43,12 +41,6 @@ const MAINNET_CHAINS_UNSORTED: Chains = [
     id: CHAIN_ID.ETHEREUM,
     slug: 'ethereum',
     icon: '/chains/ethereum.svg',
-  },
-  {
-    ...zora,
-    id: CHAIN_ID.ZORA,
-    slug: 'zora',
-    icon: '/chains/zora.png',
   },
   {
     ...base,
@@ -88,12 +80,6 @@ const TESTNET_CHAINS_UNSORTED: Chains = [
     id: CHAIN_ID.BASE_SEPOLIA,
     slug: 'base-sepolia',
     icon: '/chains/base.svg',
-  },
-  {
-    ...zoraSepolia,
-    id: CHAIN_ID.ZORA_SEPOLIA,
-    slug: 'zora-sepolia',
-    icon: '/chains/zora.png',
   },
 ] as const satisfies Chains
 
@@ -138,5 +124,5 @@ export const L1_CHAINS: NonEmptyChainIds = PUBLIC_IS_TESTNET
   : ([CHAIN_ID.ETHEREUM] as const)
 
 export const L2_CHAINS: NonEmptyChainIds = PUBLIC_IS_TESTNET
-  ? ([CHAIN_ID.ZORA_SEPOLIA, CHAIN_ID.BASE_SEPOLIA, CHAIN_ID.OPTIMISM_SEPOLIA] as const)
-  : ([CHAIN_ID.ZORA, CHAIN_ID.BASE, CHAIN_ID.OPTIMISM] as const)
+  ? ([CHAIN_ID.BASE_SEPOLIA, CHAIN_ID.OPTIMISM_SEPOLIA] as const)
+  : ([CHAIN_ID.BASE, CHAIN_ID.OPTIMISM] as const)
