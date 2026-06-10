@@ -4,6 +4,7 @@ import { PUBLIC_DEFAULT_CHAINS } from '@buildeross/constants/chains'
 import {
   About,
   Activity,
+  Candidates,
   CustomMinterForm,
   ERC721RedeemMinterForm,
   MerkleReserveMinterForm,
@@ -107,6 +108,30 @@ const DaoPage: NextPageWithLayout<DaoPageProps> = ({ chainId, collectionAddress 
   // Check if signer address is a minter - show custom minter tab if true
   const isSignerCustomMinter = !!signerAddress && !!isSignerMinter
 
+  // Check governor version for candidates feature (requires >= 3.0.0)
+  const { data: governorVersion } = useReadContract({
+    abi: [
+      {
+        inputs: [],
+        name: 'contractVersion',
+        outputs: [{ internalType: 'string', name: '', type: 'string' }],
+        stateMutability: 'view',
+        type: 'function',
+      },
+    ],
+    address: addresses.governor,
+    functionName: 'contractVersion',
+    chainId: chain.id,
+  })
+
+  const supportsCandidates = React.useMemo(() => {
+    if (!governorVersion) return false
+    const version = governorVersion as string
+    // Check if version >= 3.0.0
+    const [major] = version.split('.').map(Number)
+    return major >= 3
+  }, [governorVersion])
+
   const [showMinterModal, setShowMinterModal] = React.useState(false)
 
   const openTab = React.useCallback(
@@ -176,6 +201,30 @@ const DaoPage: NextPageWithLayout<DaoPageProps> = ({ chainId, collectionAddress 
     })
   }, [push, chain.slug, addresses.token])
 
+  const openCandidateCreatePage = React.useCallback(async () => {
+    await push({
+      pathname: `/dao/[network]/[token]/candidate/create`,
+      query: {
+        network: chain.slug,
+        token: addresses.token,
+      },
+    })
+  }, [push, chain.slug, addresses.token])
+
+  const openCandidateDetailPage = React.useCallback(
+    async (candidateId: string) => {
+      await push({
+        pathname: `/dao/[network]/[token]/candidate/[candidateId]`,
+        query: {
+          network: chain.slug,
+          token: addresses.token,
+          candidateId,
+        },
+      })
+    },
+    [push, chain.slug, addresses.token]
+  )
+
   const sections = React.useMemo(() => {
     const aboutSection = {
       title: 'About',
@@ -184,7 +233,7 @@ const DaoPage: NextPageWithLayout<DaoPageProps> = ({ chainId, collectionAddress 
     const baseSections = [
       aboutSection,
       {
-        title: 'Activity',
+        title: supportsCandidates ? 'Proposals' : 'Activity',
         component: [
           <Activity
             key={'proposals'}
@@ -193,6 +242,20 @@ const DaoPage: NextPageWithLayout<DaoPageProps> = ({ chainId, collectionAddress 
           />,
         ],
       },
+      ...(supportsCandidates
+        ? [
+            {
+              title: 'Candidates',
+              component: [
+                <Candidates
+                  key={'candidates'}
+                  onOpenCandidateCreate={openCandidateCreatePage}
+                  onSelectCandidate={openCandidateDetailPage}
+                />,
+              ],
+            },
+          ]
+        : []),
       {
         title: 'Admin',
         component: [<PreAuctionForm key={'admin'} />],
@@ -234,8 +297,11 @@ const DaoPage: NextPageWithLayout<DaoPageProps> = ({ chainId, collectionAddress 
     isMerkleReserveMinter,
     isERC721RedeemMinter,
     isSignerCustomMinter,
+    supportsCandidates,
     openProposalCreatePage,
     openProposalReviewPage,
+    openCandidateCreatePage,
+    openCandidateDetailPage,
   ])
 
   if (!owner) {
@@ -260,7 +326,20 @@ const DaoPage: NextPageWithLayout<DaoPageProps> = ({ chainId, collectionAddress 
     )
   }
 
-  const activeTab = query.tab ? (query.tab as string) : 'activity'
+  // Normalize tab - both 'activity' and 'proposals' should map to the proposals/activity section
+  const rawTab = query.tab
+    ? (query.tab as string)
+    : supportsCandidates
+      ? 'proposals'
+      : 'activity'
+  const activeTab =
+    rawTab === 'proposals' && supportsCandidates
+      ? 'proposals'
+      : rawTab === 'activity'
+        ? supportsCandidates
+          ? 'proposals'
+          : 'activity'
+        : rawTab
   const path = `/dao/${chain.slug}/${addresses.token}/?tab=${activeTab}`
 
   return (
