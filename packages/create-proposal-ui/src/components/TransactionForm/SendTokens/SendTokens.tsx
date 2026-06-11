@@ -1,5 +1,5 @@
 import { erc20Abi } from '@buildeross/sdk/contract'
-import { useChainStore, useProposalStore } from '@buildeross/stores'
+import { useChainStore } from '@buildeross/stores'
 import { TransactionType } from '@buildeross/types'
 import { FIELD_TYPES, SmartInput } from '@buildeross/ui/Fields'
 import { getEnsAddress } from '@buildeross/utils/ens'
@@ -21,7 +21,12 @@ import {
   parseUnits,
 } from 'viem'
 
-import { CsvRecord, CsvUpload, TokenSelectionForm } from '../../shared'
+import {
+  CsvRecord,
+  CsvUpload,
+  TokenSelectionForm,
+  useTransactionComposer,
+} from '../../shared'
 import sendTokensSchema, {
   RecipientFormValues,
   SendTokensValues,
@@ -31,8 +36,7 @@ import { SendTokensDetailsDisplay } from './SendTokensDetailsDisplay'
 const DECIMAL_REGEX = /^(\d+\.?\d*|\.\d+)$/
 
 export const SendTokens: React.FC = () => {
-  const addTransaction = useProposalStore((state) => state.addTransaction)
-  const resetTransactionType = useProposalStore((state) => state.resetTransactionType)
+  const { addTransaction, resetTransactionType } = useTransactionComposer()
   const chain = useChainStore((x) => x.chain)
   const [csvError, setCsvError] = useState<string>('')
 

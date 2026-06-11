@@ -21,6 +21,7 @@ import { AnimatedModal, SuccessModalContent } from '@buildeross/ui/Modal'
 import { defaultInputLabelStyle } from '@buildeross/ui/styles'
 import { getEnsAddress } from '@buildeross/utils/ens'
 import { handleGMTOffset, unpackOptionalArray } from '@buildeross/utils/helpers'
+import { buildProposalMetadata } from '@buildeross/utils/proposalMetadata'
 import { getProvider } from '@buildeross/utils/provider'
 import { Box, Button, Flex, Icon, Stack, Text, vars } from '@buildeross/zord'
 import dayjs from 'dayjs'
@@ -303,10 +304,9 @@ export const ReviewProposalForm = ({
           targets: targets,
           values: transactionValues,
           calldatas: calldata as Hex[],
-          description: JSON.stringify({
-            version: 1,
-            title: values.title?.trim() || '',
-            description: values.summary?.trim() || '',
+          description: buildProposalMetadata({
+            title: values.title,
+            description: values.summary,
             transactionBundles: values.transactions.map((transaction) => ({
               type: transaction.type,
               summary: dedupeBundleSummary(
@@ -315,12 +315,10 @@ export const ReviewProposalForm = ({
               ),
               callCount: transaction.transactions.length,
             })),
-            ...(values.representedAddressEnabled && values.representedAddress?.trim()
-              ? { representedAddress: values.representedAddress.trim() }
-              : {}),
-            ...(values.discussionUrl?.trim()
-              ? { discussionUrl: values.discussionUrl.trim() }
-              : {}),
+            representedAddress: values.representedAddressEnabled
+              ? values.representedAddress
+              : undefined,
+            discussionUrl: values.discussionUrl,
           }),
         }
 
